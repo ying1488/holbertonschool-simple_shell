@@ -9,7 +9,7 @@
 int main(int ac, char **av)
 {
 	int i = 0;
-
+	/**loop through number of av**/
 	while (av[i])
 	{
 		printf("%s ", av[i]);
