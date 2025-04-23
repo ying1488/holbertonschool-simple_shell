@@ -24,7 +24,7 @@ typedef struct path_node
  * Return: Address of the new element, or NULL if it failed.
  */
 
-path_node_t *add_node_end(path_node_t **head, const chat *str)
+path_node_t *add_node_end(path_node_t **head, const char *str)
 {
 	path_node_t *new_node;
 	path_node_t *temp;
@@ -43,7 +43,7 @@ path_node_t *add_node_end(path_node_t **head, const chat *str)
 	new_node->dir = strdup(str);
 	if (!new_node->dir)
 	{
-		peeror("add_node_end: strdup failed");
+		perror("add_node_end: strdup failed");
 		free(new_node);
 		return NULL;
 	}
@@ -111,7 +111,62 @@ path_node_t *build_path_list(void)
 	path_env = getenv("PATH");
 	if (path_env == NULL || *path_env == '\0')
 	{
-		return NULL;
+		return (NULL);
 	}
 	/*Duplicate the PATH string (because strtok modifies the string)*/
+	path_copy = strdup(path_env);
+	if(path_copy == NULL)
+	{
+		perror("build_path_list: strdup failed");
+		return (NULL);
+	}
+	
+	/*Tokenize the duplicate string*/
+	token = strtok(path_copy, delimiter);
+	while (token != NULL)
+	{
+		if(add_node_end(&head, token) == NULL)
+		{
+			fprintf(stderr, "build_path_list: Failed to add node\n");
+			free(path_copy);
+			free_path_list(head);
+			return (NULL);
+		}
+	
+	/* Get the nest token*/
+	token = strtok(NULL, delimiter);
+	}
+	/*Free the duplicated PATH string (no longer needed)*/
+	free(path_copy);
+	/*Return the head of the list*/
+	return (head);
 }
+
+int main(void) {
+    path_node_t *path_list_head;
+    path_node_t *current;
+    int count = 0;
+
+    printf("Building PATH directory list...\n");
+    path_list_head = build_path_list();
+
+    if (path_list_head == NULL) {
+        printf("PATH list could not be built (PATH not set, empty, or memory error).\n");
+        return 1;
+    }
+
+    printf("PATH Directories:\n");
+    current = path_list_head;
+    while (current != NULL) {
+        count++;
+        printf("[%d]: %s\n", count, current->dir ? current->dir : "(null string!)");
+        current = current->next;
+    }
+
+    printf("\nFreeing the list...\n");
+    free_path_list(path_list_head);
+    printf("List freed.\n");
+
+    return 0;
+}
+
