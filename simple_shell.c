@@ -20,7 +20,7 @@ int main(void)
 
     while (1)
     {
-        printf("simple_shell$ "); /*Display prompt*/
+        printf("#cisfun$ "); /*Display prompt*/
         if (fgets(input, sizeof(input), stdin) == NULL)
         {
             printf("\n");
@@ -47,7 +47,7 @@ int main(void)
             /*Child process*/
             if (execlp(command, command, NULL) == -1)
             {
-                perror("Error: "); /*Handle invalid executable*/
+                perror("./shell"); /*Handle invalid executable*/
 	    }
             exit(EXIT_FAILURE);
         }
