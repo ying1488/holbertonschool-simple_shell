@@ -47,7 +47,7 @@ int main(void)
             /*Child process*/
             if (execlp(command, command, NULL) == -1)
             {
-                perror("Error: command not found"); /*Handle invalid executable*/
+                perror("Error: "); /*Handle invalid executable*/
 	    }
             exit(EXIT_FAILURE);
         }
