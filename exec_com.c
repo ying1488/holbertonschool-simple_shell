@@ -88,44 +88,26 @@ void execute_command(char **args)
     if (!args || !args[0])
         return;
 
-    if (_strcmp(args[0], "exit") == 0)
-    {
-        if (isatty(STDIN_FILENO))  /* Check if shell is interactive */
-        {
-            free_args(args);
-            exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            return;  /*Ignore 'exit' in non-interactive mode*/
-        }
-    }
-
     if (_strchr(args[0], '/'))
         path = _strdup(args[0]);
     else
         path = find_path(args[0]);
-    
+
     if (!path)
     {
         write(STDERR_FILENO, "./hsh: 1: ", 10);
         write(STDERR_FILENO, args[0], _strlen(args[0]));
         write(STDERR_FILENO, ": not found\n", 12);
-
-        if (!isatty(STDIN_FILENO))
-        {
-            free_args(args);
-            exit(127);
-        }
-        return;
+        status = 127;
+        goto cleanup;
     }
-    
+
     pid = fork();
     if (pid == -1)
     {
         perror("fork");
-        free(path);
-        return;
+        status = 1;
+        goto cleanup;
     }
 
     if (pid == 0)
@@ -133,13 +115,23 @@ void execute_command(char **args)
         if (execve(path, args, environ) == -1)
         {
             perror(args[0]);
-            exit(EXIT_FAILURE);
+            _exit(1); /*Exit child process with error status*/
         }
     }
     else
     {
         waitpid(pid, &status, 0);
+        if (WIFEXITED(status))
+            status = WEXITSTATUS(status);
+        else if (WIFSIGNALED(status))
+            status = 128 + WTERMSIG(status);
+        else
+            status = 1;
     }
 
+cleanup:
     free(path);
-}       
+    if (!isatty(STDIN_FILENO))
+        exit(status);
+}
+
