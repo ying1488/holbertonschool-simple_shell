@@ -91,14 +91,14 @@ void execute_command(char **args)
     /* Handle built-in command: exit */
     if (_strcmp(args[0], "exit") == 0)
     {
-        if (isatty(STDIN_FILENO))  // Check if shell is interactive
+        if (isatty(STDIN_FILENO))  /*Check if shell is interactive*/
         {
             free_args(args);
             exit(EXIT_SUCCESS);
         }
         else
         {
-            return;  // Ignore 'exit' in non-interactive mode
+            return;  /*Ignore 'exit' in non-interactive mode*/
         }
     }
 
