@@ -8,55 +8,57 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-
+/**
+ * search_in_path - Search for a command in the PATH directories.
+ * @command: Command to find.
+ *
+ * Return: Pointer to a string with the full path if found, NULL otherwise.
+ */
 char *search_in_path(char *command)
 {
-    struct stat st;
-    char *path_env = NULL, *dir, *full_path;
-    int i;
+    char *path_env, *path_copy, *token, *full_path;
 
-    /* Check if the command is an absolute or relative path */
-    if (command[0] == '/' || command[0] == '.')
+    if (command == NULL)
+        return (NULL);
+
+    if (strchr(command, '/') != NULL)
     {
-        if (stat(command, &st) == 0 && (st.st_mode & S_IXUSR))
-            return strdup(command); /* Return command if valid */
-        return NULL;
+        if (access(command, X_OK) == 0)
+            return (strdup(command));
+        else
+            return (NULL);
     }
 
-    /* Check PATH in environ */
-    for (i = 0; environ[i]; i++)
+    path_env = getenv("PATH");
+    if (path_env == NULL)
+        return (NULL);
+
+    path_copy = strdup(path_env);
+    if (path_copy == NULL)
+        return (NULL);
+
+    token = strtok(path_copy, ":");
+    while (token != NULL)
     {
-        if (strncmp(environ[i], "PATH=", 5) == 0)
+        full_path = malloc(strlen(token) + strlen(command) + 2);
+        if (full_path == NULL)
         {
-            path_env = environ[i] + 5; /* Skip "PATH=" */
-            break;
+            free(path_copy);
+            return (NULL);
         }
-    }
 
-    /* Handle empty PATH */
-    if (!path_env || strlen(path_env) == 0)
-    {
-        if (stat(command, &st) == 0 && (st.st_mode & S_IXUSR))
-            return strdup(command);
-        return NULL;
-    }
+        sprintf(full_path, "%s/%s", token, command);
 
-    /* Search for command in PATH directories */
-    dir = strtok(path_env, ":");
-    while (dir)
-    {
-        full_path = malloc(strlen(dir) + strlen(command) + 2);
-        if (!full_path)
+        if (access(full_path, X_OK) == 0)
         {
-            perror("Error allocating memory");
-            return NULL;
+            free(path_copy);
+            return (full_path);
         }
-        sprintf(full_path, "%s/%s", dir, command);
-        if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR))
-            return full_path;
+
         free(full_path);
-        dir = strtok(NULL, ":");
+        token = strtok(NULL, ":");
     }
 
-    return NULL;
+    free(path_copy);
+    return (NULL);
 }

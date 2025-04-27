@@ -1,37 +1,34 @@
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "shell.h"
 
-
-char **split_line(char *line) {
+char **split_line(char *line)
+{
     int bufsize = 64;
     char **tokens = malloc(bufsize * sizeof(char *));
     char *token;
     int position = 0;
 
-    if (!tokens) {
+    if (!tokens)
+    {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    line = trim_whitespace(line);
-
     token = strtok(line, " \t\n");
-    while (token != NULL) {
+    while (token != NULL)
+    {
         tokens[position++] = token;
-        if (position >= bufsize) {
+        if (position >= bufsize)
+        {
             bufsize += 64;
             tokens = realloc(tokens, bufsize * sizeof(char *));
-            if (!tokens) {
+            if (!tokens)
+            {
                 perror("Error reallocating memory");
                 exit(EXIT_FAILURE);
             }
         }
         token = strtok(NULL, " \t\n");
     }
-
-    tokens[position] = NULL; 
+    tokens[position] = NULL;
     return tokens;
 }
