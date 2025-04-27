@@ -22,6 +22,6 @@ int shell_exit(char **args);
 char *_strdup(const char *s);
 char *_strchr(const char *s, char c);
 int _strlen(const char *s);
-
+int _strcmp(const char *s1, const char *s2);
 
 #endif /* SHELL_H */

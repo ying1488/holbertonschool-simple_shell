@@ -87,10 +87,25 @@ void execute_command(char **args)
 
     if (!args || !args[0])
         return;
+
+    if (_strcmp(args[0], "exit") == 0)
+    {
+        if (isatty(STDIN_FILENO))  /* Check if shell is interactive */
+        {
+            free_args(args);
+            exit(EXIT_SUCCESS);
+        }
+        else
+        {
+            return;  /*Ignore 'exit' in non-interactive mode*/
+        }
+    }
+
     if (_strchr(args[0], '/'))
         path = _strdup(args[0]);
     else
         path = find_path(args[0]);
+    
     if (!path)
     {
         write(STDERR_FILENO, "./hsh: 1: ", 10);
@@ -104,6 +119,7 @@ void execute_command(char **args)
         }
         return;
     }
+    
     pid = fork();
     if (pid == -1)
     {
