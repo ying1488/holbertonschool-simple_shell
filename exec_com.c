@@ -84,7 +84,7 @@ void execute_command(char **args)
     pid_t pid;
     int status;
     char *path = NULL;
-
+    
     if (!args || !args[0])
         return;
 
@@ -95,10 +95,6 @@ void execute_command(char **args)
         {
             free_args(args);
             exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            return;  /*Ignore 'exit' in non-interactive mode*/
         }
     }
 
@@ -140,6 +136,7 @@ void execute_command(char **args)
     else
     {
         waitpid(pid, &status, 0);
+          si_status = WEXITSTATUS(status);
     }
 
     free(path);
