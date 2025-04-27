@@ -18,5 +18,10 @@ char *find_path(char *command);
 char **split_line(char *line);
 void free_args(char **args);
 void prompt(void); /* if you have a function to print your shell prompt */
+int shell_exit(char **args);
+char *_strdup(const char *s);
+char *_strchr(const char *s, char c);
+int _strlen(const char *s);
+
 
 #endif /* SHELL_H */

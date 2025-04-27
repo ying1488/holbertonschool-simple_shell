@@ -9,137 +9,121 @@
 
 extern char **environ;
 
-/**
- * get_path_env - Gets the PATH environment variable
- * Return: PATH value or NULL if not found
- */
 char *get_path_env(void)
 {
-    char *path = getenv("PATH");
-    return path ? path : NULL;
+    int i;
+
+    for (i = 0; environ[i] != NULL; i++)
+    {
+        if (strncmp(environ[i], "PATH=", 5) == 0)
+        {
+            /* Skip "PATH=" and return the value */
+            return (environ[i] + 5);
+        }
+    }
+    return (NULL); /* PATH not found */
 }
 
-/**
- * find_command_path - Finds the full path of a command
- * @command: The command to find
- * Return: Full path if found, NULL otherwise
- */
-char *find_command_path(char *command)
+char *find_path(char *command)
 {
     char *path_env, *path_copy, *dir;
-    char *full_path = NULL;
-    struct stat st;
+    char *full_path;
+    size_t full_len;
 
     if (!command)
         return NULL;
 
-    /* Check if command is already a full path */
-    if (command[0] == '/' || command[0] == '.') {
-        if (stat(command, &st) == 0 && (st.st_mode & S_IXUSR))
-            return strdup(command);
-        return NULL;
-    }
-
-    /* Get PATH environment variable */
+    /* Get PATH from the environment */
     path_env = get_path_env();
-
-    /* Handle empty PATH case - check current directory only */
-    if (path_env == NULL || *path_env == '\0') {
-        char *cwd = getcwd(NULL, 0);
-        if (!cwd) return NULL;
-        
-        full_path = malloc(strlen(cwd) + strlen(command) + 2);
-        if (!full_path) {
-            free(cwd);
-            return NULL;
-        }
-        sprintf(full_path, "%s/%s", cwd, command);
-        free(cwd);
-
-        if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR))
-            return full_path;
-
-        free(full_path);
+    if (!path_env)
         return NULL;
-    }
 
-    /* Normal PATH lookup */
+    /* Make a copy because strtok modifies the string */
     path_copy = strdup(path_env);
-    if (!path_copy) return NULL;
+    if (!path_copy)
+        return NULL;
 
     dir = strtok(path_copy, ":");
-    while (dir != NULL) {
-        full_path = malloc(strlen(dir) + strlen(command) + 2);
-        if (!full_path) {
+    while (dir != NULL)
+    {
+        /* Build full path string: dir + "/" + command + null */
+        full_len = strlen(dir) + 1 + strlen(command) + 1;
+        full_path = malloc(full_len);
+        if (!full_path)
+        {
             free(path_copy);
             return NULL;
         }
-        sprintf(full_path, "%s/%s", dir, command);
 
-        if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR)) {
+        strcpy(full_path, dir);
+        strcat(full_path, "/");
+        strcat(full_path, command);
+
+        /* Check if this file exists and is executable */
+        if (access(full_path, X_OK) == 0)
+        {
             free(path_copy);
-            return full_path;
+            return full_path; /* SUCCESS: Return this path */
         }
 
+        /* Otherwise try next directory */
         free(full_path);
         dir = strtok(NULL, ":");
     }
 
+    /* Not found */
     free(path_copy);
     return NULL;
 }
-
 /**
- * execute_command - Executes a command with arguments
- * @args: NULL terminated array of arguments
+ * execute_command - Execute a command
+ * @args: Null-terminated array of arguments
  */
 void execute_command(char **args)
 {
-    char *full_path = NULL;
     pid_t pid;
     int status;
+    char *path = NULL;
 
     if (!args || !args[0])
         return;
+    if (_strchr(args[0], '/'))
+        path = _strdup(args[0]);
+    else
+        path = find_path(args[0]);
+    if (!path)
+    {
+        write(STDERR_FILENO, "./hsh: 1: ", 10);
+        write(STDERR_FILENO, args[0], _strlen(args[0]));
+        write(STDERR_FILENO, ": not found\n", 12);
 
-    /* Handle builtins first */
-    if (strcmp(args[0], "exit") == 0) {
-        shell_exit(args);
+        if (!isatty(STDIN_FILENO))
+        {
+            free_args(args);
+            exit(127);
+        }
         return;
     }
-    else if (strcmp(args[0], "env") == 0) {
-        print_environment();
-        return;
-    }
-    else if (strcmp(args[0], "cd") == 0) {
-        change_directory(args);
-        return;
-    }
-
-    /* Find command path */
-    full_path = find_command_path(args[0]);
-    if (!full_path) {
-        fprintf(stderr, "%s: command not found\n", args[0]);
-        exit(127); /* Exit with status 127 when command not found */
-    }
-
     pid = fork();
-    if (pid == -1) {
+    if (pid == -1)
+    {
         perror("fork");
-        free(full_path);
+        free(path);
         return;
     }
 
-    if (pid == 0) {
-        /* Child process */
-        if (execve(full_path, args, environ) == -1) {
+    if (pid == 0)
+    {
+        if (execve(path, args, environ) == -1)
+        {
             perror(args[0]);
-            free(full_path);
             exit(EXIT_FAILURE);
         }
-    } else {
-        /* Parent process */
-        waitpid(pid, &status, 0);
-        free(full_path);
     }
-}
+    else
+    {
+        waitpid(pid, &status, 0);
+    }
+
+    free(path);
+}       
