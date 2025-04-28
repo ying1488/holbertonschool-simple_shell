@@ -110,7 +110,27 @@ void execute_command(char **args)
         free_args(args);
         exit(last_status);  /* Exit the shell with the last command's status */
     }
+ /* Handle built-in command: env */
 
+    if (_strcmp(args[0], "env") == 0)
+
+    {
+
+        int i = 0;
+
+        while (environ[i] != NULL)
+
+        {
+
+            printf("%s\n", environ[i]);  /* Print each environment variable */
+
+            i++;
+
+        }
+
+        return;  /* No need to fork or execute anything else */
+
+    }
     if (_strchr(args[0], '/'))
         path = _strdup(args[0]);
     else
@@ -152,10 +172,10 @@ void execute_command(char **args)
     else  /* Parent process */
     {
         waitpid(pid, &status, 0);  /* Wait for child to finish */
-        if (WIFEXITED(status))
-            last_status = WEXITSTATUS(status);  /* Get the exit status of the command */
-        else if (WIFSIGNALED(status))
-            last_status = 128 + WTERMSIG(status);  /* If the command was killed by a signal */
+        if (WIFEXITED(status)) /* Check if the child process exited normally*/
+            last_status = WEXITSTATUS(status);  /* capture normal exit status */
+        else if (WIFSIGNALED(status)) /**If the process was terminated by a signal*/
+            last_status = 128 + WTERMSIG(status);  /* Set exit status based on signal*/
 	else
             last_status = 0;  /* Default case for abnormal exit */
     }
