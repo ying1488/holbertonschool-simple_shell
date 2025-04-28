@@ -55,16 +55,16 @@ char *find_path(char *command)
 		full_len = strlen(dir) + 1 + strlen(command) + 1;
 		full_path = malloc(full_len);
 		if (!full_path)
-			free(path_copy);
-		return (NULL);
-	}
+		{free(path_copy);
+		return (NULL);}
 	strcpy(full_path, dir);
 	strcat(full_path, "/");
 	strcat(full_path, command);
 	/* Check if this file exists and is executable */
 	if (access(full_path, X_OK) == 0)
-		free(path_copy);
-		return (full_path); /* SUCCESS: Return this path */
+	{	free(path_copy);
+		return (full_path);
+	} /* SUCCESS: Return this path */
 	/* Otherwise try next directory */
 	free(full_path);
 	dir = strtok(NULL, ":");

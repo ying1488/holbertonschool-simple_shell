@@ -30,6 +30,7 @@ typedef struct shell_ctx
 void execute_command(char **args);
 char *get_command_path(char **args);
 char *find_path(char *command);
+char *get_path_env(void);
 char **split_line(char *line);
 void free_args(char **args);
 void prompt(void);
