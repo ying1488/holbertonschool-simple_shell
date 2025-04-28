@@ -72,7 +72,7 @@ void execute_command(char **args)
 	if (!args || !args[0])
 		return;
 	/* Handle built-in command: exit */
-	if (handle_builtin_exit(args)
+	if (handle_builtin_exit(args))
 		return;
 	/* Find command path */
 	path = get_command_path(args);
