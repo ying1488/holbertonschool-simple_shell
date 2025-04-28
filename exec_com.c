@@ -95,7 +95,7 @@ void execute_command(char **args)
         if (isatty(STDIN_FILENO))  /* Check if shell is interactive */
         {
             free_args(args);
-            exit(EXIT_SUCCESS);
+            exit(last_status);
         }
         else
         {
@@ -143,7 +143,10 @@ void execute_command(char **args)
     else
     {
         waitpid(pid, &status, 0);
-        last_status = status;  /*Store the last command's status*/
+        if (WIFEXITED(status))
+		last_status = WEXITSTATUS(status);
+		else
+			last_status = 1;
     }
 
     free(path);
