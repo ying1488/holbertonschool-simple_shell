@@ -4,8 +4,6 @@
 #include <string.h>
 #include <unistd.h>
 
-extern char **environ;
-
 /**
  * get_path_env - Retrieve the value of the
  * PATH environment variable
@@ -15,17 +13,17 @@ extern char **environ;
  */
 char *get_path_env(void)
 {
-    int i;
+	int i;
 
-    for (i = 0; environ[i] != NULL; i++)
-    {
-        if (strncmp(environ[i], "PATH=", 5) == 0)
-        {
-            /* Skip "PATH=" and return the value */
-            return (environ[i] + 5);
-        }
-    }
-    return (NULL); /* PATH not found */
+	for (i = 0; environ[i] != NULL; i++)
+	{
+		if (strncmp(environ[i], "PATH=", 5) == 0)
+		{
+			/* Skip "PATH=" and return the value */
+			return (environ[i] + 5);
+		}
+	}
+	return (NULL); /* PATH not found */
 }
 
 /**
@@ -37,73 +35,60 @@ char *get_path_env(void)
  */
 char *find_path(char *command)
 {
-    char *path_env, *path_copy, *dir;
-    char *full_path;
-    size_t full_len;
+	char *path_env, *path_copy, *dir;
+	char *full_path;
+	size_t full_len;
 
-    if (!command)
-        return (NULL);
-
-    /* Get PATH from the environment */
-    path_env = get_path_env();
-    if (!path_env)
-        return (NULL);
-
-    /* Make a copy because strtok modifies the string */
-    path_copy = strdup(path_env);
-    if (!path_copy)
-        return (NULL);
-
-    dir = strtok(path_copy, ":");
-    while (dir != NULL)
-    {
-        /* Build full path string: dir + "/" + command + null */
-        full_len = strlen(dir) + 1 + strlen(command) + 1;
-        full_path = malloc(full_len);
-        if (!full_path)
-        {
-            free(path_copy);
-            return (NULL);
-        }
-
-        strcpy(full_path, dir);
-        strcat(full_path, "/");
-        strcat(full_path, command);
-
-        /* Check if this file exists and is executable */
-        if (access(full_path, X_OK) == 0)
-        {
-            free(path_copy);
-            return (full_path); /* SUCCESS: Return this path */
-        }
-
-        /* Otherwise try next directory */
-        free(full_path);
-        dir = strtok(NULL, ":");
-    }
-
-    /* Not found */
-    free(path_copy);
-    return (NULL);
+	if (!command)
+		return (NULL);
+	/* Get PATH from the environment */
+	path_env = get_path_env();
+	if (!path_env)
+		return (NULL);
+	/* Make a copy because strtok modifies the string */
+	path_copy = strdup(path_env);
+	if (!path_copy)
+		return (NULL);
+	dir = strtok(path_copy, ":");
+	while (dir != NULL)
+	{/* Build full path string: dir + "/" + command + null */
+		full_len = strlen(dir) + 1 + strlen(command) + 1;
+		full_path = malloc(full_len);
+		if (!full_path)
+			free(path_copy);
+		return (NULL);
+	}
+	strcpy(full_path, dir);
+	strcat(full_path, "/");
+	strcat(full_path, command);
+	/* Check if this file exists and is executable */
+	if (access(full_path, X_OK) == 0)
+		free(path_copy);
+		return (full_path); /* SUCCESS: Return this path */
+	/* Otherwise try next directory */
+	free(full_path);
+	dir = strtok(NULL, ":");
+	} /* Not found */
+	free(path_copy);
+	return (NULL);
 }
 
 /**
  * get_command_path - Find the full path of a command
  * @args: Null-terminated array of arguments passed to the shell
- * Return: A string containing the full path to the command if found,
- */
+ * Return: A string containing the full path to the command
+**/
 char *get_command_path(char **args)
 {
-    char *path = NULL;
+	char *path = NULL;
 
-    if (_strchr(args[0], '/'))
-    {
-        path = _strdup(args[0]);
-    }
-    else
-    {
-        path = find_path(args[0]);
-    }
-    return (path);
+	if (_strchr(args[0], '/'))
+	{
+		path = _strdup(args[0]);
+	}
+	else
+	{
+		path = find_path(args[0]);
+	}
+	return (path);
 }
-
