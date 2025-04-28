@@ -81,20 +81,25 @@ char *find_path(char *command)
  */
 void execute_command(char **args)
 {
+  static int last_status = 0;  /*To store the last exit status*/
     pid_t pid;
     int status;
     char *path = NULL;
-    
+
     if (!args || !args[0])
         return;
 
     /* Handle built-in command: exit */
     if (_strcmp(args[0], "exit") == 0)
     {
-        if (isatty(STDIN_FILENO))  /*Check if shell is interactive*/
+        if (isatty(STDIN_FILENO))  /* Check if shell is interactive */
         {
             free_args(args);
             exit(EXIT_SUCCESS);
+        }
+        else
+        {
+            return;  /* Ignore 'exit' in non-interactive mode */
         }
     }
 
@@ -109,10 +114,12 @@ void execute_command(char **args)
         write(STDERR_FILENO, args[0], _strlen(args[0]));
         write(STDERR_FILENO, ": not found\n", 12);
 
+        last_status = 127;  /*Set last_status to indicate command not found*/
+
         if (!isatty(STDIN_FILENO))
         {
             free_args(args);
-            exit(127);
+            exit(last_status);  /*Exit with the appropriate status*/
         }
         return;
     }
@@ -136,9 +143,8 @@ void execute_command(char **args)
     else
     {
         waitpid(pid, &status, 0);
-          si_status = WEXITSTATUS(status);
+        last_status = status;  /*Store the last command's status*/
     }
 
     free(path);
 }
-
