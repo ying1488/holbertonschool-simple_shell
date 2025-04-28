@@ -79,9 +79,24 @@ char *find_path(char *command)
  * execute_command - Execute a command
  * @args: Null-terminated array of arguments
  */
+#include "shell.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+extern char **environ;
+
+/**
+ * execute_command - Execute a command
+ * @args: Null-terminated array of arguments
+ */
 void execute_command(char **args)
 {
-  static int last_status = 0;  /*To store the last exit status*/
+    static int last_status = 0;  /* Store the last exit status */
     pid_t pid;
     int status;
     char *path = NULL;
@@ -92,15 +107,8 @@ void execute_command(char **args)
     /* Handle built-in command: exit */
     if (_strcmp(args[0], "exit") == 0)
     {
-        if (isatty(STDIN_FILENO))  /* Check if shell is interactive */
-        {
-            free_args(args);
-            exit(last_status);
-        }
-        else
-        {
-            return;  /* Ignore 'exit' in non-interactive mode */
-        }
+        free_args(args);
+        exit(last_status);  /* Exit the shell with the last command's status */
     }
 
     if (_strchr(args[0], '/'))
@@ -108,46 +116,50 @@ void execute_command(char **args)
     else
         path = find_path(args[0]);
 
-    if (!path)
+    if (!path)  /* Command not found */
     {
         write(STDERR_FILENO, "./hsh: 1: ", 10);
         write(STDERR_FILENO, args[0], _strlen(args[0]));
         write(STDERR_FILENO, ": not found\n", 12);
 
-        last_status = 127;  /*Set last_status to indicate command not found*/
+        last_status = 127;  /* Set last_status to indicate command not found */
 
         if (!isatty(STDIN_FILENO))
         {
             free_args(args);
-            exit(last_status);  /*Exit with the appropriate status*/
+            exit(last_status);  /* Exit with the "not found" error status */
         }
         return;
     }
 
     pid = fork();
-    if (pid == -1)
+    if (pid == -1)  /* Error with forking */
     {
         perror("fork");
         free(path);
         return;
     }
 
-    if (pid == 0)
+    if (pid == 0)  /* Child process */
     {
-        if (execve(path, args, environ) == -1)
+        if (execve(path, args, environ) == -1)  /* Execute the command */
         {
-            perror(args[0]);
+            perror(args[0]);  /* Print error if execve fails */
+            free(path);
             exit(EXIT_FAILURE);
         }
     }
-    else
+    else  /* Parent process */
     {
-        waitpid(pid, &status, 0);
+        waitpid(pid, &status, 0);  /* Wait for child to finish */
         if (WIFEXITED(status))
-		last_status = WEXITSTATUS(status);
-		else
-			last_status = 1;
+            last_status = WEXITSTATUS(status);  /* Get the exit status of the command */
+        else if (WIFSIGNALED(status))
+            last_status = 128 + WTERMSIG(status);  /* If the command was killed by a signal */
+	else
+            last_status = 0;  /* Default case for abnormal exit */
     }
 
-    free(path);
+    free(path);  /* Free the path allocated for the command */
 }
+
