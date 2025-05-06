@@ -1,22 +1,29 @@
-Simple Shell (hsh)
+# Simple Shell (hsh)
 
-Description
-hsh is a simple UNIX command-line interpreter (shell) written in C.
-It mimics basic functionalities of standard shells like sh or bash.
+## Description
+
+**hsh** is a simple UNIX command-line interpreter (shell) written in C.  
+It mimics basic functionalities of standard shells like `sh` or `bash`.
 
 This project was created as part of the Holberton School curriculum.
 
-Features
-Execute commands located in the system PATH.
-Handle built-in commands:
-exit [status]
-Command execution even when environment variables are removed.
-Graceful error handling for not found commands.
-Interactive and non-interactive mode support.
-Built-in Commands
-Command	Description
-exit	Exit the shell with status
-Files
+## Features
+
+- Execute commands located in the system PATH.
+- Handle built-in commands:
+  - `exit [status]`
+- Command execution even when environment variables are removed.
+- Graceful error handling for not found commands.
+- Interactive and non-interactive mode support.
+
+## Built-in Commands
+
+| Command | Description             |
+|---------|-------------------------|
+| `exit`  | Exit the shell with status |
+
+## Files
+
 main.c - Entry point for the shell
 
 execute_command.c - Execute user commands
@@ -29,7 +36,9 @@ utils.c - Helper functions (_strlen, _strdup, etc.)
 
 shell.h - Header file with function prototypes and struct definitions
 
-How to Compile
+## How to Compile
+
+```bash
 gcc -Wall -Werror -Wextra -pedantic *.c -o hsh
 
 ## Usage
@@ -54,9 +63,5 @@ hsh main.c shell.c README.md
 
 
 ## Authors
-Chutaphat Niampoung
-Ying Tai
-
-By
 Chutaphat Niampoung
 Ying Tai
