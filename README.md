@@ -1,4 +1,5 @@
 Simple Shell (hsh)
+
 Description
 hsh is a simple UNIX command-line interpreter (shell) written in C.
 It mimics basic functionalities of standard shells like sh or bash.
